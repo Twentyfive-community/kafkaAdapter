@@ -1,0 +1,13 @@
+[2023-05-03 10:31:17,668] ERROR Encountered an error while configuring the connection, closing it. (kafka.network.DataPlaneAcceptor)
+java.net.SocketException: Invalid argument
+	at java.base/sun.nio.ch.Net.setIntOption0(Native Method)
+	at java.base/sun.nio.ch.Net.setSocketOption(Net.java:455)
+	at java.base/sun.nio.ch.Net.setSocketOption(Net.java:393)
+	at java.base/sun.nio.ch.SocketChannelImpl.setOption(SocketChannelImpl.java:287)
+	at java.base/sun.nio.ch.SocketAdaptor.setBooleanOption(SocketAdaptor.java:202)
+	at java.base/sun.nio.ch.SocketAdaptor.setTcpNoDelay(SocketAdaptor.java:238)
+	at kafka.network.Acceptor.configureAcceptedSocketChannel(SocketServer.scala:759)
+	at kafka.network.Acceptor.accept(SocketServer.scala:737)
+	at kafka.network.Acceptor.acceptNewConnections(SocketServer.scala:703)
+	at kafka.network.Acceptor.run(SocketServer.scala:645)
+	at java.base/java.lang.Thread.run(Thread.java:1623)
