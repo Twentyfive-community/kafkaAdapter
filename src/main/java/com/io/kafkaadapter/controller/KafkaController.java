@@ -1,9 +1,12 @@
 package com.io.kafkaadapter.controller;
 
 import com.io.kafkaadapter.commands.Topic;
-import com.io.kafkaadapter.commands.TopicCommand;
 import com.io.kafkaadapter.messages.MessageType;
+import com.io.kafkaadapter.services.KafkaBashHelper;
+import com.io.kafkaadapter.services.TopicBashHelper;
+import com.io.kafkaadapter.services.ZookeeperBashHelper;
 import com.io.kafkaadapter.utils.KafkaData;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -17,20 +20,57 @@ public class KafkaController {
     private boolean isZookeperOn = false;
     private boolean isKafkaOn = false;
 
-    private boolean isWindows() {
-        return System.getProperty("os.name").toLowerCase().startsWith("windows");
-    }
+    @Autowired
+    private KafkaBashHelper kafkaBashHelper;
+    @Autowired
+    private ZookeeperBashHelper zookeeperBashHelper;
+    @Autowired
+    private TopicBashHelper topicBashHelper;
+
+
 
     @GetMapping("/start-zookeeper")
     public String startZookeeper() throws IOException {
-        return turnZookeperOn();
+        //return turnZookeperOn();
+        return zookeeperBashHelper.turnOn();
+    }
+
+    @GetMapping("/stop-zookeeper")
+    public String stopZookeeper() throws IOException, InterruptedException {
+        //return turnZookeperOn();
+        return zookeeperBashHelper.turnOff();
     }
 
     @GetMapping("/start-kafka")
     public String startKafka() throws IOException {
-        if (isZookeperOn) return executeKafkaCommands();
-        else return MessageType.KAFKA_START_ERROR_ZKP_OFF;
+        /*if (isZookeperOn) return executeKafkaCommands();
+        else return MessageType.KAFKA_START_ERROR_ZKP_OFF;*/
+        return kafkaBashHelper.turnOn();
     }
+
+    @GetMapping("/stop-kafka")
+    public String stopKafka() {
+        return kafkaBashHelper.turnOff();
+    }
+
+    @PostMapping("/new-topic")
+    public String addTopic(@RequestBody Topic topic) throws IOException {
+        /*TopicCommand command = new TopicCommand(topic);
+        return (isKafkaOn) ? executeNewTopicCommand(command.generateCommand()) : "can't add topic: kafka is off";*/
+        return topicBashHelper.addTopic(topic);
+    }
+
+    @GetMapping("/all-topics")
+    public ArrayList<String> getTopics(){
+        return topicBashHelper.getAllTopics();
+    }
+
+    @DeleteMapping("/delete-topic/{name}")
+    public String deleteTopic(@PathVariable("name") String name){
+        return topicBashHelper.removeTopic(name);
+    }
+
+
 
     private String executeKafkaCommands() throws IOException {
         List<String> commands = new ArrayList<>();
@@ -66,30 +106,6 @@ public class KafkaController {
         return MessageType.ZOOKEPER_START_SUCCESS;
     }
 
-    private void turnZookeperOff(){
-        isZookeperOn=false;
-    }
-    private void turnKafkaOff(){ isKafkaOn=false; }
-
-    public File createTempScript(List<String> commands) throws IOException {
-        File tempScript = File.createTempFile("script", null);
-
-        Writer streamWriter = new OutputStreamWriter(new FileOutputStream(
-                tempScript));
-        PrintWriter printWriter = new PrintWriter(streamWriter);
-        printWriter.println("#!/bin/bash");
-        commands.forEach((c) -> printWriter.println(c));
-        printWriter.close();
-
-        return tempScript;
-    }
-
-    @PostMapping("/new-topic")
-    public String addTopic(@RequestBody Topic topic) throws IOException {
-        TopicCommand command = new TopicCommand(topic);
-        return (isKafkaOn) ? executeNewTopicCommand(command.generateCommand()) : "can't add topic: kafka is off";
-    }
-
     private String executeNewTopicCommand(String command) throws IOException {
         List<String> commands = new ArrayList<>();
         commands.add(command);
@@ -105,4 +121,25 @@ public class KafkaController {
         finally {tempScript.delete();}
         return MessageType.KAFKA_TOPIC_ADD_SUCCESS;
     }
+
+    private void turnZookeperOff(){
+        isZookeperOn=false;
+    }
+    private void turnKafkaOff(){
+        //kill kafka pid
+        isKafkaOn=false; }
+
+    public File createTempScript(List<String> commands) throws IOException {
+        File tempScript = File.createTempFile("script", null);
+
+        Writer streamWriter = new OutputStreamWriter(new FileOutputStream(
+                tempScript));
+        PrintWriter printWriter = new PrintWriter(streamWriter);
+        printWriter.println("#!/bin/bash");
+        commands.forEach((c) -> printWriter.println(c));
+        printWriter.close();
+
+        return tempScript;
+    }
+
 }

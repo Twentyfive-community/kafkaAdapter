@@ -1,23 +1,18 @@
 package com.io.kafkaadapter.commands;
 
 import com.io.kafkaadapter.utils.KafkaData;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import java.text.MessageFormat;
 
 @Data
-public class TopicCommand {
+public class NewTopicCommand {
 
     private Topic topic;
 
-    //@Value("${spring.kafka.bootstrap-servers}")
+    @Value("${spring.kafka.bootstrap-servers}")
     String bootstrapServer = "localhost:9092";
 
-    public TopicCommand(Topic topic) {
+    public NewTopicCommand(Topic topic) {
         this.topic = topic;
     }
 
