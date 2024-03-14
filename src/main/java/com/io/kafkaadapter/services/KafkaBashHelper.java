@@ -39,7 +39,9 @@ public class KafkaBashHelper implements BashHelper{
 
     public String turnOff(){
         if (isKafkaOn){
-            processHelper.getProcesses().get(serviceName).destroy();
+            List<String> commands = new ArrayList<>();
+            commands.add(KafkaData.KAFKA_DIRECTORY_PATH + "bin/kafka-server-stop.sh");
+            //processHelper.getProcesses().get(serviceName).destroy();
             isKafkaOn=false;
             return MessageType.KAKFA_STOP_SUCCESS;
         }

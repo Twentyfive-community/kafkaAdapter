@@ -1,12 +1,15 @@
 package com.io.kafkaadapter.controller;
 
 import com.io.kafkaadapter.commands.Topic;
+import com.io.kafkaadapter.messages.MessageResponse;
 import com.io.kafkaadapter.messages.MessageType;
 import com.io.kafkaadapter.services.KafkaBashHelper;
 import com.io.kafkaadapter.services.TopicBashHelper;
 import com.io.kafkaadapter.services.ZookeeperBashHelper;
 import com.io.kafkaadapter.utils.KafkaData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -14,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 public class KafkaController {
 
     private boolean isZookeperOn = false;
     private boolean isKafkaOn = false;
+    private HttpStatus statusCode = null;
 
     @Autowired
     private KafkaBashHelper kafkaBashHelper;
@@ -30,22 +35,50 @@ public class KafkaController {
 
 
     @GetMapping("/start-zookeeper")
-    public String startZookeeper() throws IOException {
+    public ResponseEntity<MessageResponse> startZookeeper() throws IOException {
         //return turnZookeperOn();
-        return zookeeperBashHelper.turnOn();
+        MessageResponse response = zookeeperBashHelper.turnOn();
+        switch (response.getMessage()){
+            case MessageType.ZOOKEEPER_START_SUCCESS:
+                statusCode = HttpStatus.OK;
+                break;
+            /*case MessageType.TEMP_BASH_FILE_ERROR:
+                statusCode = HttpStatus.CONFLICT;
+                break;
+            case MessageType.FATAL_ERROR:
+                statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+                break;
+            case MessageType.STARTING_SERVICE_ERROR:
+                statusCode = HttpStatus.CONFLICT;
+                break;
+            case MessageType.ZOOKEPER_START_ERROR:
+                statusCode = HttpStatus.CONFLICT;
+                break;*/
+            default:
+                statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+                break;
+        }
+        return new ResponseEntity<>(response, statusCode);
     }
 
     @GetMapping("/stop-zookeeper")
-    public String stopZookeeper() throws IOException, InterruptedException {
+    public ResponseEntity<MessageResponse> stopZookeeper() throws IOException, InterruptedException {
         //return turnZookeperOn();
-        return zookeeperBashHelper.turnOff();
+        MessageResponse response = zookeeperBashHelper.turnOff();
+        switch (response.getMessage()){
+            case MessageType.ZOOKEEPER_STOP_SUCCESS:
+                statusCode = HttpStatus.OK;
+                break;
+            default: statusCode = HttpStatus.INTERNAL_SERVER_ERROR; break;
+        }
+        return new ResponseEntity<>(response, statusCode);
     }
 
     @GetMapping("/start-kafka")
-    public String startKafka() throws IOException {
+    public ResponseEntity<String> startKafka() throws IOException {
         /*if (isZookeperOn) return executeKafkaCommands();
         else return MessageType.KAFKA_START_ERROR_ZKP_OFF;*/
-        return kafkaBashHelper.turnOn();
+        return new ResponseEntity<>(kafkaBashHelper.turnOn(),HttpStatus.OK);
     }
 
     @GetMapping("/stop-kafka")
@@ -103,7 +136,7 @@ public class KafkaController {
         catch (InterruptedException exception){return MessageType.FATAL_ERROR;}
         finally {tempScript.delete();}
         isZookeperOn=true;
-        return MessageType.ZOOKEPER_START_SUCCESS;
+        return MessageType.ZOOKEEPER_START_SUCCESS;
     }
 
     private String executeNewTopicCommand(String command) throws IOException {
