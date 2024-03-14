@@ -41,6 +41,7 @@ public class KafkaController {
         switch (response.getMessage()){
             case MessageType.ZOOKEEPER_START_SUCCESS:
                 statusCode = HttpStatus.OK;
+                //TRING
                 break;
             /*case MessageType.TEMP_BASH_FILE_ERROR:
                 statusCode = HttpStatus.CONFLICT;
