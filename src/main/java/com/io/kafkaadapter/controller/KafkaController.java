@@ -61,6 +61,7 @@ public class KafkaController {
         return new ResponseEntity<>(response, statusCode);
     }
 
+    //TODO working?
     @GetMapping("/stop-zookeeper")
     public ResponseEntity<MessageResponse> stopZookeeper() throws IOException, InterruptedException {
         //return turnZookeperOn();
@@ -81,6 +82,7 @@ public class KafkaController {
         return new ResponseEntity<>(kafkaBashHelper.turnOn(),HttpStatus.OK);
     }
 
+    //TODO working?
     @GetMapping("/stop-kafka")
     public String stopKafka() {
         return kafkaBashHelper.turnOff();
